@@ -1,20 +1,26 @@
 <p align="center">
-  <img src="./public/icon.svg" alt="Comparison Lab — Visual Anomaly Inspection" width="96" />
+  <img src="header/header.png" alt="Visual Anomaly Comparison Lab banner" width="100%" />
 </p>
 
 <h1 align="center">Visual Anomaly Comparison Lab</h1>
 
 <p align="center">
-  <strong>Next.js 15 · React 19 · TypeScript · Tailwind · Zustand · Recharts</strong><br />
-  <em>Terra & cream inspection UI for MVTec AD bottle anomaly detection with a denoising conv autoencoder backend.</em>
+  Reconstruction-based anomaly inspection dashboard for bottle defect analysis using a denoising convolutional autoencoder, heatmaps, masks, anomaly scores, and approximate suspicious-region overlays.
 </p>
 
 <p align="center">
-  <a href="https://github.com/sidnei-almeida/visual-anomaly-comparison-lab"><strong>View on GitHub</strong></a>
+  <a href="https://visual-anomaly-comparison-lab.vercel.app/"><strong>Live Demo</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://salmeida-bottle-anomaly-detection.hf.space">Hugging Face API</a>
+  <a href="https://github.com/sidnei-almeida/visual-anomaly-comparison-lab"><strong>GitHub</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://salmeida-bottle-anomaly-detection.hf.space"><strong>API</strong></a>
   &nbsp;·&nbsp;
   <a href="https://salmeida-bottle-anomaly-detection.hf.space/health">API health</a>
+</p>
+
+<p align="center">
+  <strong>Next.js 15 · React 19 · TypeScript · Tailwind · Zustand · Recharts</strong><br />
+  <em>Terra & cream inspection UI for MVTec AD bottle anomaly detection.</em>
 </p>
 
 <p align="center">
@@ -37,8 +43,14 @@ A **full-screen visual comparison lab** for industrial anomaly inspection. Analy
 
 The dashboard does **not** train models. It orchestrates inference, caches session results, visualizes localization artifacts, and surfaces scores against category-specific thresholds shipped as JSON in the repository.
 
-> **Production API:** `https://salmeida-bottle-anomaly-detection.hf.space`  
-> **V1 demo scope:** curated **bottle** catalog only (`category=bottle` on every predict call). The backend supports seven MVTec categories; artifacts for all seven are kept in-repo for reference.
+> **Live demo:** [visual-anomaly-comparison-lab.vercel.app](https://visual-anomaly-comparison-lab.vercel.app/)  
+> **GitHub:** [github.com/sidnei-almeida/visual-anomaly-comparison-lab](https://github.com/sidnei-almeida/visual-anomaly-comparison-lab)  
+> **Production API:** [salmeida-bottle-anomaly-detection.hf.space](https://salmeida-bottle-anomaly-detection.hf.space)  
+> **V1 demo scope:** curated **bottle** catalog only (`category=bottle` on every predict call).
+
+### Interpretation note
+
+Bounding boxes are **approximate visual hints** derived from reconstruction error maps — not supervised object-detection ground truth. The **heatmap** and **reconstruction** views are the primary interpretation outputs; use boxes as quick localization cues only.
 
 ---
 
@@ -283,8 +295,8 @@ npm run catalog:rebuild   # regenerate data/catalog/manifest.json
 1. Import [visual-anomaly-comparison-lab](https://github.com/sidnei-almeida/visual-anomaly-comparison-lab) on [Vercel](https://vercel.com).
 2. Framework preset: **Next.js**
 3. Environment variable:
-   - `NEXT_PUBLIC_ANOMALY_API_URL` = `https://salmeida-bottle-anomaly-detection.hf.space` (or your own Space URL)
-4. Deploy.
+   - `NEXT_PUBLIC_ANOMALY_API_URL` = `https://salmeida-bottle-anomaly-detection.hf.space`
+4. Deploy — live app: [visual-anomaly-comparison-lab.vercel.app](https://visual-anomaly-comparison-lab.vercel.app/)
 
 Static assets (`public/icon.svg`, `site.webmanifest`) and App Router metadata (`src/app/icon.svg`, `apple-icon.svg`) provide favicons and theme color `#060503`.
 
@@ -294,6 +306,8 @@ Static assets (`public/icon.svg`, `site.webmanifest`) and App Router metadata (`
 
 ```
 visual-anomaly-comparison-lab/
+├── header/
+│   └── header.png               # README banner
 ├── public/
 │   ├── icon.svg                 # Favicon + README hero
 │   ├── apple-icon.svg           # Apple touch icon
