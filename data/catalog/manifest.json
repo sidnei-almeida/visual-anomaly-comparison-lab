@@ -1,0 +1,237 @@
+{
+  "generatedAt": "2026-05-29T05:07:00.291Z",
+  "count": 44,
+  "normal": 7,
+  "anomaly": 37,
+  "excludedPassFilenames": [
+    "inspect-bottle-good-a.png",
+    "inspect-bottle-good-000.png",
+    "inspect-bottle-good-002.png",
+    "inspect-bottle-good-007.png",
+    "inspect-bottle-good-011.png",
+    "inspect-bottle-good-013.png",
+    "inspect-bottle-good-019.png"
+  ],
+  "entries": [
+    {
+      "filename": "inspect-bottle-broken-large.png",
+      "name": "Bottle - Large Break · 012",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small.png",
+      "name": "Bottle - Small Break · 017",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination.png",
+      "name": "Bottle - Contamination · 010",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-good-001.png",
+      "name": "Bottle - Pass · 001",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-003.png",
+      "name": "Bottle - Pass · 003",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-004.png",
+      "name": "Bottle - Pass · 004",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-005.png",
+      "name": "Bottle - Pass · 005",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-009.png",
+      "name": "Bottle - Pass · 009",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-015.png",
+      "name": "Bottle - Pass · 015",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-good-b.png",
+      "name": "Bottle - Pass · b",
+      "label": "normal"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-000.png",
+      "name": "Bottle - Large Break · 000",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-001.png",
+      "name": "Bottle - Large Break · 001",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-003.png",
+      "name": "Bottle - Large Break · 003",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-005.png",
+      "name": "Bottle - Large Break · 005",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-007.png",
+      "name": "Bottle - Large Break · 007",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-009.png",
+      "name": "Bottle - Large Break · 009",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-011.png",
+      "name": "Bottle - Large Break · 011",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-013.png",
+      "name": "Bottle - Large Break · 013",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-015.png",
+      "name": "Bottle - Large Break · 015",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-017.png",
+      "name": "Bottle - Large Break · 017",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-large-019.png",
+      "name": "Bottle - Large Break · 019",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-000.png",
+      "name": "Bottle - Small Break · 000",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-001.png",
+      "name": "Bottle - Small Break · 001",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-002.png",
+      "name": "Bottle - Small Break · 002",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-004.png",
+      "name": "Bottle - Small Break · 004",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-006.png",
+      "name": "Bottle - Small Break · 006",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-008.png",
+      "name": "Bottle - Small Break · 008",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-010.png",
+      "name": "Bottle - Small Break · 010",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-012.png",
+      "name": "Bottle - Small Break · 012",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-014.png",
+      "name": "Bottle - Small Break · 014",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-016.png",
+      "name": "Bottle - Small Break · 016",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-018.png",
+      "name": "Bottle - Small Break · 018",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-broken-small-020.png",
+      "name": "Bottle - Small Break · 020",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-000.png",
+      "name": "Bottle - Contamination · 000",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-001.png",
+      "name": "Bottle - Contamination · 001",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-002.png",
+      "name": "Bottle - Contamination · 002",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-003.png",
+      "name": "Bottle - Contamination · 003",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-005.png",
+      "name": "Bottle - Contamination · 005",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-007.png",
+      "name": "Bottle - Contamination · 007",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-009.png",
+      "name": "Bottle - Contamination · 009",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-011.png",
+      "name": "Bottle - Contamination · 011",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-013.png",
+      "name": "Bottle - Contamination · 013",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-015.png",
+      "name": "Bottle - Contamination · 015",
+      "label": "anomaly"
+    },
+    {
+      "filename": "inspect-bottle-contamination-017.png",
+      "name": "Bottle - Contamination · 017",
+      "label": "anomaly"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+    "experiment_name": "mvtec_structured_objects_dae_v1",
+    "created_at": "2026-05-29T02:43:05.133124",
+    "localization_method": "category_normalized_reconstruction_error",
+    "description": "Bounding boxes are derived from post-processed reconstruction error maps. They represent approximate suspicious regions, not supervised ground-truth object detection boxes.",
+    "recommended_visual_outputs": [
+        "original_image",
+        "reconstruction",
+        "normalized_error_heatmap",
+        "binary_mask",
+        "approximate_bounding_boxes",
+        "anomaly_score",
+        "status"
+    ],
+    "score_map": {
+        "base_error": "mean_absolute_error_per_pixel_across_rgb_channels",
+        "normalization": "category z-score normalization",
+        "formula": "z_map = max((error_map - category_mean_error_map) / category_std_error_map, 0)",
+        "smoothing": {
+            "method": "GaussianBlur",
+            "kernel_size": [
+                5,
+                5
+            ]
+        }
+    },
+    "classification": {
+        "recommended_score": "top_1_z_score",
+        "threshold_source": "category_specific_thresholds",
+        "threshold_file": "mvtec_structured_objects_dae_v1_thresholds.json"
+    },
+    "bounding_boxes": {
+        "method": "conservative_connected_components_on_z_map",
+        "high_percentile": 99.5,
+        "low_percentile": 96.0,
+        "min_area": 40,
+        "max_area_ratio": 0.12,
+        "kernel_size": 3,
+        "dilate_iterations": 0,
+        "max_boxes": 2,
+        "min_mean_z": 1.0,
+        "box_color_rgb": [
+            255,
+            0,
+            0
+        ],
+        "box_thickness": 2
+    },
+    "frontend_guidance": {
+        "primary_visual": "heatmap",
+        "secondary_visual": "approximate_bounding_boxes",
+        "warning": "Do not interpret bounding boxes as exact defect segmentation. Use them as visual hints for suspicious regions.",
+        "recommended_label": "Approximate suspicious region"
+    }
+}

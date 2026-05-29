@@ -1,0 +1,45 @@
+{
+  "name": "visual-anomaly-comparison-lab",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "test:api": "tsx scripts/smoke-test-api.ts",
+    "test:selection": "tsx scripts/validate-selection-flow.ts",
+    "test:categories": "tsx scripts/validate-api-categories.ts",
+    "test:bbox": "tsx scripts/validate-bbox-layout.ts",
+    "catalog:generate": "tsx scripts/generate-bottle-catalog.ts",
+    "catalog:rebuild": "tsx scripts/rebuild-bottle-catalog.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.16.0",
+    "lucide-react": "^0.513.0",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-dropzone": "^14.3.8",
+    "recharts": "^2.15.3",
+    "sharp": "^0.33.5",
+    "tailwind-merge": "^3.3.0",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "^15.3.3",
+    "postcss": "^8.5.4",
+    "prettier": "^3.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.3",
+    "typescript": "^5.8.3"
+  }
+}

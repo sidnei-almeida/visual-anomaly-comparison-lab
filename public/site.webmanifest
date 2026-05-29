@@ -1,0 +1,17 @@
+{
+  "name": "Comparison Lab — Bottle Anomaly Inspection",
+  "short_name": "Comparison Lab",
+  "description": "Visual anomaly comparison lab for MVTec AD bottle inspection.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060503",
+  "theme_color": "#060503",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
