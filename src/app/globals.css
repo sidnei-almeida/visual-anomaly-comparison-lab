@@ -79,33 +79,41 @@ body {
 
 /* --- Native browser polish (ThinkPad theme) --- */
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+/* Scrollbar — Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border-radius: 999px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 999px;
-  border: 2px solid var(--scrollbar-track);
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-*::-webkit-scrollbar-corner {
+::-webkit-scrollbar-track {
   background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e63329;
+}
+
+/* Scrollbar — Firefox / Zen (aplicar no elemento que rola; track transparente é ignorado) */
+html {
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #0a0a0a;
+}
+
+.lab-sidebar-scroll,
+.inspection-sidebar-scroll,
+.full-timeline-modal__body,
+.overflow-y-auto,
+.overflow-auto,
+.overflow-y-scroll,
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #0a0a0a;
 }
 
 ::selection {
@@ -389,23 +397,6 @@ input[type="range"]::-webkit-slider-thumb {
     border: 0.5px solid var(--control-border);
     background: var(--bg-sidebar);
     color: var(--ghost-text);
-  }
-
-  .lab-sidebar-scroll {
-    scrollbar-color: #2a2a2a transparent;
-  }
-
-  .lab-sidebar-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .lab-sidebar-scroll::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
-    border-color: transparent;
-  }
-
-  .lab-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--terra);
   }
 
   .center-content,
