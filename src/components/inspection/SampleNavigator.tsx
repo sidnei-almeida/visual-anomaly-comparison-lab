@@ -37,7 +37,7 @@ export function SampleNavigator({ onSelectSample, onUploadFiles }: SampleNavigat
       <div className="border-b border-lab-border px-2.5 py-2">
         <div className="flex items-center justify-between">
           <p className="section-label">Sample navigator</p>
-          <span className="font-mono text-[8px] text-lab-muted">
+          <span className="font-mono text-[8px] text-[#444444]">
             {inspectedCount} / {samples.length}
           </span>
         </div>

@@ -6,7 +6,7 @@ interface LabLogoMarkProps {
   title?: string;
 }
 
-/** Comparison Lab mark — dual-pane inspection + reticle. Used in topbar, splash, favicon. */
+/** Minimal inspection reticle — red focal point on black. Used in topbar, splash, favicon. */
 export function LabLogoMark({
   size = 24,
   className,
@@ -23,18 +23,13 @@ export function LabLogoMark({
       role="img"
       aria-label={title}
     >
-      <rect width="24" height="24" rx="3" fill="#95573E" />
-      <rect x="5" y="7" width="6" height="10" rx="0.75" stroke="#FBE4C5" strokeWidth="1" fill="rgba(251,228,197,0.1)" />
-      <rect x="13" y="7" width="6" height="10" rx="0.75" stroke="#FBE4C5" strokeWidth="1" fill="none" opacity="0.55" />
-      <line x1="12" y1="7" x2="12" y2="17" stroke="#FBE4C5" strokeWidth="0.75" opacity="0.35" />
-      <ellipse cx="8" cy="12" rx="1.6" ry="1.1" stroke="#FBE4C5" strokeWidth="0.85" fill="none" />
-      <circle cx="8" cy="12" r="0.55" fill="#FBE4C5" />
-      <circle cx="16.5" cy="10.5" r="0.9" fill="#E07A5F" />
+      <rect width="24" height="24" rx="2" fill="#0A0A0A" />
+      <circle cx="12" cy="12" r="2.25" fill="#E63329" />
       <path
-        d="M5 7.5H6.75M5 7.5V9.25M19 16.5H17.25M19 16.5V14.75"
-        stroke="#E07A5F"
-        strokeWidth="0.85"
+        stroke="#555555"
+        strokeWidth="1.25"
         strokeLinecap="square"
+        d="M12 5v4.25M12 14.75V19M5 12h4.25M14.75 12H19"
       />
     </svg>
   );

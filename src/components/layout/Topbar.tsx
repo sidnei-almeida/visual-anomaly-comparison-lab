@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid2x2, HelpCircle, Settings, SunMedium } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { LabLogoMark } from "@/components/brand/LabLogoMark";
 import { IconButton } from "@/components/ui/IconButton";
 import { useInspectionStore } from "@/store/inspection-store";
@@ -35,12 +35,15 @@ export function Topbar({ sessionDate, sessionTime }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="lab-topbar__session">SESSION {sessionDate}</span>
-        <span className="lab-topbar__session text-lab-cream">{sessionTime}</span>
+        <span className="lab-topbar__session">
+          SESSION <span className="lab-topbar__session-value">{sessionDate}</span>
+        </span>
+        <span className="lab-topbar__session-time">{sessionTime}</span>
         <span
           className={cn(
             "lab-topbar__badge inline-flex items-center gap-1.5",
-            !isLive && "border-[rgba(224,122,95,0.3)] bg-[rgba(224,122,95,0.12)] text-lab-anomaly",
+            isLive && "lab-topbar__badge--live",
+            !isLive && "lab-topbar__badge--offline",
           )}
         >
           {isLive && <span className="lab-topbar__badge-dot" aria-hidden />}
@@ -49,21 +52,8 @@ export function Topbar({ sessionDate, sessionTime }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          className="batch-btn hidden sm:inline-flex"
-        >
-          <Grid2x2 className="h-3 w-3" />
-          View Mode
-        </button>
-        <IconButton label="Display">
-          <SunMedium className="h-3.5 w-3.5" />
-        </IconButton>
         <IconButton label="Help">
           <HelpCircle className="h-3.5 w-3.5" />
-        </IconButton>
-        <IconButton label="Settings">
-          <Settings className="h-3.5 w-3.5" />
         </IconButton>
       </div>
     </header>

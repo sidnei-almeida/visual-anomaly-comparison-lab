@@ -15,7 +15,7 @@ export function CategorySelector() {
         {API_CATEGORY_LABELS[DEMO_API_CATEGORY]} · thr{" "}
         {formatCategoryThreshold(DEMO_API_CATEGORY)}
       </p>
-      <p className="mt-1.5 text-[9px] leading-relaxed text-lab-muted">
+      <p className="mt-1.5 text-[9px] italic leading-relaxed text-[#444444]">
         Demo focused on MVTec AD bottle samples.
         {(isInspecting || isLineRunning) && (
           <span className="block text-lab-muted/80">Inspection in progress…</span>

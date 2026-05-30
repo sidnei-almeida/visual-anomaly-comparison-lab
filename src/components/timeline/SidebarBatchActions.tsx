@@ -49,7 +49,7 @@ export function SidebarBatchActions({
               type="button"
               onClick={onStartPending}
               disabled={!apiReady || pendingCount === 0}
-              className="batch-btn"
+              className="batch-btn batch-btn--pending"
               title={
                 pendingCount === 0
                   ? "All samples already inspected"
@@ -63,7 +63,7 @@ export function SidebarBatchActions({
               type="button"
               onClick={onReprocessAll}
               disabled={!apiReady || samples.length === 0}
-              className="batch-btn"
+              className="batch-btn batch-btn--ghost"
               title="Re-run inference for every catalog sample"
             >
               <RotateCcw className="h-3 w-3" />

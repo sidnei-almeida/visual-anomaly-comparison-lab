@@ -83,6 +83,6 @@ export function describeGaugeArcSegment(
 
 export function gaugeZoneColor(ratio: number | null | undefined): string {
   const value = clampGaugeRatio(ratio ?? 0);
-  if (value < GAUGE_THRESHOLD_RATIO) return "#7aaa5e";
-  return "#e07a5f";
+  if (value < GAUGE_THRESHOLD_RATIO) return "#22C55E";
+  return "#E63329";
 }

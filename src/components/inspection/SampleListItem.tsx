@@ -44,7 +44,7 @@ export function SampleListItem({
         )}
         style={{ ["--item-index" as string]: Math.min(index, 10) }}
       >
-        <div className="sample-navigator-thumb relative shrink-0 overflow-hidden bg-[#1a1814]">
+        <div className="sample-navigator-thumb relative shrink-0 overflow-hidden bg-[#111111]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={sample.imageUrl} alt="" className="h-full w-full object-cover" />
         </div>

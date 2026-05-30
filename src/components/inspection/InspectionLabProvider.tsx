@@ -433,14 +433,14 @@ export function InspectionLabProvider({ children }: { children?: React.ReactNode
       <Topbar sessionDate={sessionDate} sessionTime={sessionTime} />
 
       {demoFallbackEnvEnabled && (
-        <div className="lab-banner bg-[rgba(224,122,95,0.08)] text-lab-cream">
+        <div className="lab-banner bg-[rgba(230,51,41,0.08)] text-lab-cream">
           Demo fallback active — failed inferences may use local synthetic data. Real and demo results
           are labeled separately.
         </div>
       )}
 
       {sessionContainsDemoData && !demoFallbackEnvEnabled && (
-        <div className="lab-banner bg-[rgba(224,122,95,0.08)] text-lab-cream">
+        <div className="lab-banner bg-[rgba(230,51,41,0.08)] text-lab-cream">
           This session contains demo fallback data. Reset before trusting live metrics.
           <button
             type="button"
@@ -472,7 +472,7 @@ export function InspectionLabProvider({ children }: { children?: React.ReactNode
       )}
 
       {error && (
-        <div className="lab-banner bg-[rgba(224,122,95,0.08)] text-lab-anomaly">
+        <div className="lab-banner bg-[rgba(230,51,41,0.08)] text-lab-anomaly">
           {error}
           {currentResult?.isDemoFallback && (
             <span className="ml-2 status-badge status-badge--anomaly">Demo fallback result</span>

@@ -330,7 +330,7 @@ export function InspectionImagePanel({
                   className={cn(
                     "rounded px-1 py-0.5 text-[8px]",
                     highlighted
-                      ? "border border-lab-terra/40 bg-[#241810]/90 font-medium text-lab-cream"
+                      ? "border border-lab-terra/40 bg-[#111111]/90 font-medium text-lab-cream"
                       : "border border-lab-border bg-black/70 text-lab-muted",
                   )}
                 >

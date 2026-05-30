@@ -298,7 +298,7 @@ npm run catalog:rebuild   # regenerate data/catalog/manifest.json
    - `NEXT_PUBLIC_ANOMALY_API_URL` = `https://salmeida-bottle-anomaly-detection.hf.space`
 4. Deploy — live app: [visual-anomaly-comparison-lab.vercel.app](https://visual-anomaly-comparison-lab.vercel.app/)
 
-Static assets (`public/icon.svg`, `site.webmanifest`) and App Router metadata (`src/app/icon.svg`, `apple-icon.svg`) provide favicons and theme color `#060503`.
+Static assets (`public/icon.svg`, `site.webmanifest`) and App Router metadata (`src/app/icon.svg`, `apple-icon.svg`) provide favicons and theme color `#0A0A0A` (ThinkPad X1 Carbon).
 
 ---
 

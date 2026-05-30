@@ -79,7 +79,7 @@ export function TechnicalDetailsSection({
           <p className="truncate" title={sourcePath}>
             <span className="text-lab-text">Source:</span> {sourcePath}
           </p>
-          <p className="text-amber-400/90">{DAE_BBOX_UI.warning}</p>
+          <p className="text-lab-anomaly/90">{DAE_BBOX_UI.warning}</p>
           <div>
             <p className="mb-1 text-lab-text">Inference pipeline</p>
             <ol className="list-decimal pl-4">

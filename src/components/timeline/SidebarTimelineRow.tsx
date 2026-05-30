@@ -50,7 +50,7 @@ export function SidebarTimelineRow({
       >
         <span className="sidebar-timeline-spine-dot hidden" aria-hidden />
         <span className="sidebar-timeline-time font-mono">{timeLabel}</span>
-        <div className="sidebar-timeline-thumb overflow-hidden rounded border border-lab-border bg-white">
+        <div className="sidebar-timeline-thumb overflow-hidden rounded border border-lab-border bg-[#0d0d0d]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={sample.imageUrl} alt="" className="h-full w-full object-cover" />
         </div>
