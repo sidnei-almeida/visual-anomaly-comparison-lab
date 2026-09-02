@@ -12,10 +12,6 @@
   <a href="https://visual-anomaly-comparison-lab.vercel.app/"><strong>Live Demo</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/sidnei-almeida/visual-anomaly-comparison-lab"><strong>GitHub</strong></a>
-  &nbsp;·&nbsp;
-  <a href="https://salmeida-bottle-anomaly-detection.hf.space"><strong>API</strong></a>
-  &nbsp;·&nbsp;
-  <a href="https://salmeida-bottle-anomaly-detection.hf.space/health">API health</a>
 </p>
 
 <p align="center">
@@ -32,6 +28,8 @@
   <img src="https://img.shields.io/badge/Recharts-2-E6522C?logo=apache&logoColor=white" alt="Recharts" />
   <img src="https://img.shields.io/badge/Model-DAE-95573E" alt="Denoising Autoencoder" />
   <img src="https://img.shields.io/badge/Dataset-MVTec_AD-7aaa5e" alt="MVTec AD" />
+  <img src="https://img.shields.io/badge/Runtime-ONNX_Runtime_Web-005CED?logo=onnx&logoColor=white" alt="ONNX Runtime Web" />
+  <img src="https://img.shields.io/badge/Inference-In_browser-95573E" alt="In-browser inference" />
   <img src="https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white" alt="Vercel" />
 </p>
 
@@ -39,14 +37,15 @@
 
 ## What this is
 
-A **full-screen visual comparison lab** for industrial anomaly inspection. Analysts select MVTec AD bottle samples (or upload their own), run `POST /predict` against a **multi-product denoising convolutional autoencoder** hosted on Hugging Face Spaces, and compare four synchronized views: **original**, **reconstruction**, **heatmap**, and **mask** — with **client-drawn reticle bounding boxes** on the original panel.
+A **full-screen visual comparison lab** for industrial anomaly inspection. Analysts select MVTec AD bottle samples (or upload their own) and compare four synchronized views: **original**, **reconstruction**, **heatmap**, and **mask** — with **client-drawn reticle bounding boxes** on the original panel.
+
+Inference runs **entirely in the browser**. A **multi-product denoising convolutional autoencoder** (~1.38M parameters) is exported to ONNX and executed with onnxruntime-web (WebAssembly), and the whole post-processing chain — category z-score normalization, top-1% scoring, foreground masking and connected-component boxes — is a TypeScript port of the original Python service. There is no inference server and no serverless function: the deployment is static assets plus the existing sample route.
 
 The dashboard does **not** train models. It orchestrates inference, caches session results, visualizes localization artifacts, and surfaces scores against category-specific thresholds shipped as JSON in the repository.
 
 > **Live demo:** [visual-anomaly-comparison-lab.vercel.app](https://visual-anomaly-comparison-lab.vercel.app/)  
 > **GitHub:** [github.com/sidnei-almeida/visual-anomaly-comparison-lab](https://github.com/sidnei-almeida/visual-anomaly-comparison-lab)  
-> **Production API:** [salmeida-bottle-anomaly-detection.hf.space](https://salmeida-bottle-anomaly-detection.hf.space)  
-> **V1 demo scope:** curated **bottle** catalog only (`category=bottle` on every predict call).
+> **V1 demo scope:** curated **bottle** catalog only (`category=bottle` on every inference).
 
 ### Interpretation note
 
@@ -56,11 +55,11 @@ Bounding boxes are **approximate visual hints** derived from reconstruction erro
 
 ## Application layout & workflow
 
-Single-page lab (`/`) wrapped by an **API health gate** that blocks the UI until `GET /health` returns HTTP 200 (important for cold-started Hugging Face Spaces).
+Single-page lab (`/`) wrapped by a **model gate** that blocks the UI until the ONNX weights, the category error profile and the WebAssembly runtime have downloaded and the autoencoder has run one warm-up pass.
 
 | Zone | Component | Purpose |
 |------|-----------|---------|
-| **Top bar** | `Topbar` | Brand, session clock, API live badge, utility actions |
+| **Top bar** | `Topbar` | Brand, session clock, engine status badge, utility actions |
 | **Left sidebar** | `SampleNavigator` | Category pill, 44 curated samples, upload batch, run count |
 | **Center** | `ComparisonLab` | 2×2 image grid (ORIGINAL · RECONSTRUCTION · HEATMAP · MASK) |
 | **Right sidebar** | `InferenceSummary` | Scores, status gauge, timeline, model/localization cards |
@@ -152,16 +151,19 @@ Boxes are **not** burned into API images (`include_overlay=false`). The browser:
 - **Reprocess all** — force re-inference on every catalog sample.
 - **Stop** — abort in-flight batch with `AbortController`.
 
-### API health gate (`ApiGate`)
+### Model gate (`ApiGate`)
 
-| State | User message |
+The splash screen shows a progress bar driven by the actual asset download:
+
+| Stage | User message |
 |-------|----------------|
-| `checking` | Connecting to API… |
-| `waiting` | API is waking up, please wait… |
-| `waiting` (attempt > 3) | Still waking up, this may take up to 30 seconds… |
-| `ready` | ✓ API ready. Loading dashboard… |
+| `runtime` | Starting inference runtime… |
+| `weights` | Downloading model weights… |
+| `profile` | Loading category error profile… |
+| `warmup` | Warming up the autoencoder… |
+| `ready` | ✓ Model ready. Loading dashboard… |
 
-Polling pauses when the browser tab is hidden; CORS/network errors retry silently.
+First visit pulls roughly 19 MB uncompressed (13 MB WebAssembly runtime, 5.3 MB ONNX weights, 512 KB error profile), all served with immutable cache headers so repeat visits start instantly. A failed load shows the error and a **Retry** button.
 
 ### Polish & accessibility
 
@@ -194,7 +196,7 @@ Tokens live in `src/app/globals.css`. Brand mark: `src/components/brand/LabLogoM
 
 ---
 
-## Model & scoring (backend)
+## Model & scoring
 
 | Property | Value |
 |----------|--------|
@@ -205,8 +207,20 @@ Tokens live in `src/app/globals.css`. Brand mark: `src/components/brand/LabLogoM
 | **Recommended score** | `top_1_z_score` (top 1% of category-normalized error map) |
 | **Threshold (bottle)** | **3.911** (validation p95, category-specific) |
 | **Localization** | Connected components on z-map (max 2 boxes, conservative percentiles) |
+| **Runtime** | ONNX opset 17, executed by onnxruntime-web on WebAssembly (single-threaded) |
+| **Typical latency** | ~40–180 ms per image on a desktop browser |
 
-Multi-product thresholds for capsule, hazelnut, metal_nut, pill, screw, and zipper remain in `src/data/model-artifacts/thresholds.json` for reference; the **V1 UI sends `bottle` only**.
+Multi-product thresholds for capsule, hazelnut, metal_nut, pill, screw, and zipper remain in `src/data/model-artifacts/thresholds.json` for reference; the **V1 UI runs `bottle` only**, and only the bottle error profile is shipped to the browser.
+
+### Parity with the original Python service
+
+The TypeScript pipeline reproduces the reference implementation step for step, including the details that change results:
+
+- **Resampling** — a port of Pillow's bicubic filter (`src/lib/cv/resize.ts`) rather than canvas scaling, which uses a different kernel.
+- **OpenCV ports** — `GaussianBlur` with the hardcoded 5-tap kernel and `BORDER_REFLECT_101`, Otsu thresholding, 8-connectivity connected components in raster label order, rectangular morphology, and the exact `COLORMAP_JET` lookup table.
+- **NumPy semantics** — linear-interpolation percentiles, float32 arithmetic where NumPy stays in float32, and `astype(uint8)` truncation.
+
+`npm run test:parity` checks the port against reference outputs captured from the Python service. On the sample set, the resized input, localization mask and box geometry match exactly, and scores agree to ~1e-6 relative.
 
 ---
 
@@ -221,6 +235,7 @@ Multi-product thresholds for capsule, hazelnut, metal_nut, pill, screw, and zipp
 | Charts | Recharts 2 (session charts modal) |
 | Icons | Lucide React |
 | Dates | date-fns 4 |
+| Inference | onnxruntime-web 1.29 (WebAssembly backend) |
 | Images | sharp (build) · local catalog via `/api/samples/[filename]` |
 | Validation scripts | tsx |
 
@@ -228,17 +243,10 @@ Multi-product thresholds for capsule, hazelnut, metal_nut, pill, screw, and zipp
 
 ## Environment
 
-Copy `.env.example` to `.env.local`:
+No environment variables are required — the model ships with the app. Two optional flags remain:
 
 ```env
-# Hugging Face Space — POST /predict (no trailing slash)
-NEXT_PUBLIC_ANOMALY_API_URL=https://salmeida-bottle-anomaly-detection.hf.space
-
-# Optional aliases (same purpose)
-# NEXT_PUBLIC_API_BASE_URL=
-# NEXT_PUBLIC_VITE_API_BASE_URL=
-
-# Optional: synthetic results when prediction fails
+# Optional: synthetic results when inference fails
 # NEXT_PUBLIC_ALLOW_DEMO_FALLBACK=false
 
 # Optional: bbox coordinate debug logs in browser console
@@ -247,11 +255,10 @@ NEXT_PUBLIC_ANOMALY_API_URL=https://salmeida-bottle-anomaly-detection.hf.space
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_ANOMALY_API_URL` | API base URL for `/health`, `/predict`, metadata |
 | `NEXT_PUBLIC_ALLOW_DEMO_FALLBACK` | Enable labeled demo fallback results |
 | `NEXT_PUBLIC_DEBUG_BBOX` | Verbose bbox layout logging |
 
-Supported API categories in artifacts: `bottle`, `capsule`, `hazelnut`, `metal_nut`, `pill`, `screw`, `zipper` — **UI V1 locks to `bottle`** (`src/config/api-categories.ts`).
+Supported categories in artifacts: `bottle`, `capsule`, `hazelnut`, `metal_nut`, `pill`, `screw`, `zipper` — **UI V1 locks to `bottle`** (`src/config/api-categories.ts`).
 
 ---
 
@@ -262,14 +269,21 @@ git clone https://github.com/sidnei-almeida/visual-anomaly-comparison-lab.git
 cd visual-anomaly-comparison-lab
 
 npm install
-cp .env.example .env.local   # optional — defaults to HF Space URL
-
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-> **Note:** If the Hugging Face Space has slept, the **splash screen** may poll for 30–60+ seconds until `/health` returns 200. Status text updates with attempt count.
+`predev` and `prebuild` copy the onnxruntime-web WebAssembly files from `node_modules` into `public/ort/`, so that directory is generated and git-ignored. The ONNX weights and the error profile in `public/model/` are committed.
+
+### Re-exporting the model
+
+Only needed after retraining. Requires a Python environment with `torch`, `numpy` and `onnx`, plus a checkout of the [`anomaly_detection_unet`](https://github.com/sidnei-almeida/anomaly_detection_unet) repo next to this one:
+
+```bash
+pip install -r scripts/requirements.txt
+npm run model:export      # writes public/model/{dae-bottle.onnx,bottle-profile.bin,model-assets.json}
+```
 
 ### Production build
 
@@ -281,11 +295,14 @@ npm start
 ### Validation scripts
 
 ```bash
-npm run test:api          # smoke test GET /health + POST /predict
 npm run test:selection    # sample selection flow
 npm run test:categories   # category resolution rules
 npm run test:bbox         # bbox coordinate math
 npm run catalog:rebuild   # regenerate data/catalog/manifest.json
+
+# Parity against the original Python pipeline (needs the fixture below)
+python scripts/make-parity-fixture.py /tmp/parity-fixture
+FIXTURE_DIR=/tmp/parity-fixture npm run test:parity
 ```
 
 ---
@@ -294,9 +311,10 @@ npm run catalog:rebuild   # regenerate data/catalog/manifest.json
 
 1. Import [visual-anomaly-comparison-lab](https://github.com/sidnei-almeida/visual-anomaly-comparison-lab) on [Vercel](https://vercel.com).
 2. Framework preset: **Next.js**
-3. Environment variable:
-   - `NEXT_PUBLIC_ANOMALY_API_URL` = `https://salmeida-bottle-anomaly-detection.hf.space`
+3. No environment variables required.
 4. Deploy — live app: [visual-anomaly-comparison-lab.vercel.app](https://visual-anomaly-comparison-lab.vercel.app/)
+
+Inference happens client-side, so nothing runs in a serverless function beyond the catalog image route. The build stays well inside the Hobby plan's function size limits — a PyTorch-based API would not, which is why the model was ported to ONNX rather than lifted into a Python function.
 
 Static assets (`public/icon.svg`, `site.webmanifest`) and App Router metadata (`src/app/icon.svg`, `apple-icon.svg`) provide favicons and theme color `#0A0A0A` (ThinkPad X1 Carbon).
 
@@ -311,7 +329,9 @@ visual-anomaly-comparison-lab/
 ├── public/
 │   ├── icon.svg                 # Favicon + README hero
 │   ├── apple-icon.svg           # Apple touch icon
-│   └── site.webmanifest         # PWA manifest
+│   ├── site.webmanifest         # PWA manifest
+│   ├── model/                   # dae-bottle.onnx, bottle-profile.bin, model-assets.json
+│   └── ort/                     # onnxruntime-web wasm (generated, git-ignored)
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx           # Fonts, metadata, viewport theme
@@ -331,17 +351,20 @@ visual-anomaly-comparison-lab/
 │   │   └── layout/              # Topbar, AppShell export
 │   ├── config/
 │   │   ├── api-categories.ts    # Bottle-only V1 rules
-│   │   ├── health-check.ts      # Splash polling config
+│   │   ├── health-check.ts      # Splash gate timing
 │   │   └── mvtec-dae-artifacts.ts
 │   ├── data/
 │   │   ├── model-artifacts/     # thresholds, bbox, config, manifest JSON
 │   │   └── inspection-catalog.ts
 │   ├── hooks/                   # useCountUp
-│   ├── lib/                     # anomaly-api, bbox-layout, predict-mapper
+│   ├── lib/
+│   │   ├── cv/                  # Pillow resize, OpenCV filter/segmentation/colormap ports
+│   │   ├── inference/           # ONNX session, image I/O, scoring pipeline
+│   │   └── anomaly-api.ts       # Engine facade (predict payload shape), bbox-layout, predict-mapper
 │   ├── services/                # inspectionService, api facade
 │   └── store/                   # inspection-store (Zustand)
 ├── data/catalog/                # inspect-bottle-*.png + manifest.json
-├── scripts/                     # tests, catalog generators, smoke tests
+├── scripts/                     # model export, parity tests, catalog generators
 ├── readme_model.md              # README style reference
 ├── .env.example
 └── next.config.ts
@@ -349,36 +372,31 @@ visual-anomaly-comparison-lab/
 
 ---
 
-## API surface
+## Inference surface
 
-### `GET /health`
+`src/lib/anomaly-api.ts` is the single entry point. It keeps the response shape of the retired `POST /predict` endpoint, so the store, mappers and components were untouched by the migration.
 
-Used by **ApiGate** (HTTP 200 required) and periodic health polling in the lab (model loaded / loading / offline).
+| Export | Purpose |
+|--------|---------|
+| `preloadModel(onProgress)` | Download weights + profile, create the session, run a warm-up pass |
+| `getApiHealth()` | Engine readiness in the old `/health` shape |
+| `predictAnomaly(blob, options)` | Decode, resize, run the autoencoder, post-process, return the payload |
+| `inspectSample` / `inspectUpload` | Convenience wrappers for catalog samples and uploads |
 
-### `POST /predict`
+**Pipeline**
 
-`multipart/form-data`:
-
-| Field | V1 demo value |
-|-------|----------------|
-| `file` | Image bytes (catalog file or upload) |
-| `category` | `bottle` |
-| `include_images` | `true` |
-| `include_debug` | `false` |
-| `include_overlay` | `false` (boxes drawn in browser) |
-
-**Example**
-
-```bash
-curl -X POST "https://salmeida-bottle-anomaly-detection.hf.space/predict" \
-  -F "category=bottle" \
-  -F "include_images=true" \
-  -F "include_debug=false" \
-  -F "include_overlay=false" \
-  -F "file=@data/catalog/inspect-bottle-broken-large.png"
+```
+Blob → createImageBitmap → native RGB
+     → Pillow-compatible bicubic resize to 256×256
+     → CHW float tensor in [0, 1]
+     → ONNX autoencoder (onnxruntime-web, wasm)
+     → |input − reconstruction| → category z-map → 5×5 Gaussian blur
+     → top-1% mean vs threshold           (classification)
+     → Otsu foreground mask → p96 mask → connected components  (localization)
+     → PNG data URLs for the four panels
 ```
 
-**Response highlights**
+**Payload highlights**
 
 ```json
 {
@@ -444,7 +462,17 @@ JSON exports from training run `mvtec_structured_objects_dae_v1`:
 | `bbox-visualization.json` | Box method, score map formula, UI guidance |
 | `manifest.json` | Recommended inference pipeline steps |
 
-Loaded by `src/config/mvtec-dae-artifacts.ts` for sidebar reference and bbox UI constants.
+Loaded by `src/config/mvtec-dae-artifacts.ts` for sidebar reference, bbox UI constants and the runtime threshold.
+
+Binary artifacts consumed by the browser engine live in `public/model/`:
+
+| File | Contents |
+|------|----------|
+| `dae-bottle.onnx` | Autoencoder weights, opset 17, float32 (~5.3 MB) |
+| `bottle-profile.bin` | Packed float32 mean then std error maps, 256×256 each (512 KB) |
+| `model-assets.json` | Sizes, SHA-256 checksums and tensor layout from the export |
+
+Regenerate all three with `npm run model:export`.
 
 ---
 

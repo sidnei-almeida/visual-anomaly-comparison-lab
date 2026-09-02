@@ -3,17 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/copy-ort-assets.mjs",
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/copy-ort-assets.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "test:api": "tsx scripts/smoke-test-api.ts",
     "test:selection": "tsx scripts/validate-selection-flow.ts",
     "test:categories": "tsx scripts/validate-api-categories.ts",
     "test:bbox": "tsx scripts/validate-bbox-layout.ts",
     "catalog:generate": "tsx scripts/generate-bottle-catalog.ts",
-    "catalog:rebuild": "tsx scripts/rebuild-bottle-catalog.ts"
+    "catalog:rebuild": "tsx scripts/rebuild-bottle-catalog.ts",
+    "model:export": "python scripts/export-model-assets.py",
+    "test:parity": "tsx scripts/validate-local-inference.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -21,6 +24,7 @@
     "framer-motion": "^12.16.0",
     "lucide-react": "^0.513.0",
     "next": "^15.3.3",
+    "onnxruntime-web": "^1.29.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-dropzone": "^14.3.8",

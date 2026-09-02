@@ -1,139 +1,67 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LoadingScreen, type ApiGateState } from "@/components/gate/LoadingScreen";
-import {
-  HEALTH_CHECK_POLL_MS,
-  HEALTH_CHECK_READY_GRACE_MS,
-  HEALTH_CHECK_TIMEOUT_MS,
-  HEALTH_CHECK_URL,
-} from "@/config/health-check";
+import { GATE_READY_GRACE_MS } from "@/config/health-check";
+import { preloadModel, type ModelLoadProgress } from "@/lib/anomaly-api";
 import { cn } from "@/lib/utils";
 
 export type { ApiGateState };
 
-async function fetchHealthOk(signal: AbortSignal): Promise<boolean> {
-  try {
-    const response = await fetch(HEALTH_CHECK_URL, {
-      method: "GET",
-      signal,
-      cache: "no-store",
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
+const INITIAL_PROGRESS: ModelLoadProgress = { ratio: 0, stage: "runtime" };
 
+/** Downloads the ONNX model and holds the dashboard back until inference is possible. */
 export function ApiGate({ children }: { children: React.ReactNode }) {
-  const [gateState, setGateState] = useState<ApiGateState>("checking");
-  const [attempts, setAttempts] = useState(0);
+  const [gateState, setGateState] = useState<ApiGateState>("loading");
+  const [progress, setProgress] = useState<ModelLoadProgress>(INITIAL_PROGRESS);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
-  const gateStateRef = useRef(gateState);
-  const showDashboardRef = useRef(showDashboard);
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelledRef = useRef(false);
   const readyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const requestAbortRef = useRef<AbortController | null>(null);
-  const attemptRef = useRef(0);
-
-  gateStateRef.current = gateState;
-  showDashboardRef.current = showDashboard;
 
   useEffect(() => {
-    let cancelled = false;
+    cancelledRef.current = false;
 
-    const clearRetryTimer = () => {
-      if (retryTimerRef.current != null) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-    };
+    setGateState("loading");
+    setErrorMessage(null);
+    setProgress(INITIAL_PROGRESS);
 
-    const scheduleRetry = (runCheck: () => void) => {
-      clearRetryTimer();
-      if (document.visibilityState === "hidden") return;
-      retryTimerRef.current = setTimeout(runCheck, HEALTH_CHECK_POLL_MS);
-    };
-
-    const runCheck = async () => {
-      if (cancelled || showDashboardRef.current || document.visibilityState === "hidden") {
-        return;
-      }
-
-      requestAbortRef.current?.abort();
-      const controller = new AbortController();
-      requestAbortRef.current = controller;
-
-      const timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT_MS);
-
-      setGateState((prev) => (prev === "ready" ? "ready" : "checking"));
-
-      attemptRef.current += 1;
-      const attemptNumber = attemptRef.current;
-      setAttempts(attemptNumber);
-
-      let ok = false;
-      try {
-        ok = await fetchHealthOk(controller.signal);
-      } catch {
-        ok = false;
-      } finally {
-        clearTimeout(timeoutId);
-      }
-
-      if (cancelled || showDashboardRef.current) return;
-
-      if (ok) {
+    preloadModel((update) => {
+      if (!cancelledRef.current) setProgress(update);
+    })
+      .then(() => {
+        if (cancelledRef.current) return;
         setGateState("ready");
         readyTimerRef.current = setTimeout(() => {
-          if (!cancelled) {
-            setShowDashboard(true);
-          }
-        }, HEALTH_CHECK_READY_GRACE_MS);
-        return;
-      }
-
-      setGateState("waiting");
-      scheduleRetry(() => {
-        void runCheck();
+          if (!cancelledRef.current) setShowDashboard(true);
+        }, GATE_READY_GRACE_MS);
+      })
+      .catch((error: unknown) => {
+        if (cancelledRef.current) return;
+        setGateState("error");
+        setErrorMessage(error instanceof Error ? error.message : "Could not load the model.");
       });
-    };
-
-    void runCheck();
-
-    const onVisibilityChange = () => {
-      if (
-        document.visibilityState === "visible" &&
-        !showDashboardRef.current &&
-        gateStateRef.current !== "ready"
-      ) {
-        clearRetryTimer();
-        void runCheck();
-      }
-
-      if (document.visibilityState === "hidden") {
-        requestAbortRef.current?.abort();
-        clearRetryTimer();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      cancelled = true;
-      requestAbortRef.current?.abort();
-      clearRetryTimer();
-      if (readyTimerRef.current != null) {
-        clearTimeout(readyTimerRef.current);
-      }
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      cancelledRef.current = true;
+      if (readyTimerRef.current != null) clearTimeout(readyTimerRef.current);
     };
-  }, []);
+  }, [attempt]);
+
+  const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   return (
     <>
-      {!showDashboard && <LoadingScreen state={gateState} attempts={attempts} />}
+      {!showDashboard && (
+        <LoadingScreen
+          state={gateState}
+          progress={progress}
+          errorMessage={errorMessage}
+          onRetry={retry}
+        />
+      )}
       {showDashboard && (
         <div className={cn("app-wrapper", "app-wrapper--visible")}>{children}</div>
       )}

@@ -1,0 +1,43 @@
+{
+  "experiment_name": "mvtec_structured_objects_dae_v1",
+  "category": "bottle",
+  "image_size": 256,
+  "opset": 17,
+  "model": {
+    "file": "dae-bottle.onnx",
+    "bytes": 5528338,
+    "sha256": "05815952b57af2a41cf60d78214f696bbb93771adc1bb0143aeaee460a71d228",
+    "input": {
+      "name": "image",
+      "shape": [
+        1,
+        3,
+        256,
+        256
+      ],
+      "range": [
+        0,
+        1
+      ]
+    },
+    "output": {
+      "name": "reconstruction",
+      "shape": [
+        1,
+        3,
+        256,
+        256
+      ]
+    }
+  },
+  "profile": {
+    "file": "bottle-profile.bin",
+    "bytes": 524288,
+    "sha256": "adb46e045a62177492b4d80edf523239474a41c956c1fffa9d3e5aa50871e281",
+    "layout": "float32 little-endian: mean[256*256] then std[256*256]",
+    "mean_min": 3.178913914325676e-07,
+    "mean_max": 0.11471661925315857,
+    "std_min": 9.999999974752427e-07,
+    "std_max": 0.08282201737165451
+  }
+}

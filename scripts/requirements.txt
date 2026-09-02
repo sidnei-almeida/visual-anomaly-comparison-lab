@@ -1,6 +1,17 @@
+# --- Catalog image processing (process_images.py) ---
 opencv-python-headless>=4.8.0
 numpy>=1.26.0
 Pillow>=10.0.0
+
+# --- Model export to ONNX (export-model-assets.py) ---
+torch>=2.0.0
+onnx>=1.16.0
+# Optional — enables the PyTorch vs ONNX numerical check during export
+onnxruntime>=1.17.0
+
+# --- Parity fixture generation (make-parity-fixture.py) ---
+# Also needs a checkout of the anomaly_detection_unet repo next to this one.
+torchvision>=0.15.0
 
 # Optional — use with: python scripts/process_images.py --method rembg
 # rembg>=2.0.50

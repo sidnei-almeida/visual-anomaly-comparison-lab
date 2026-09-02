@@ -1,26 +1,26 @@
 export {
-  getApiBaseUrl,
   getApiHealth,
   fetchApiMetadata,
   predictAnomaly,
+  preloadModel,
   inspectSample,
   inspectUpload,
   assertApiReadyForInference,
 } from "@/lib/anomaly-api";
 
 import {
-  getApiBaseUrl,
   getApiHealth,
   fetchApiMetadata,
   predictAnomaly,
+  preloadModel,
   inspectSample,
   inspectUpload,
 } from "@/lib/anomaly-api";
 
 export const api = {
-  getBaseUrl: getApiBaseUrl,
   getHealth: getApiHealth,
   getMetadata: fetchApiMetadata,
+  preload: preloadModel,
   predict: predictAnomaly,
   inspectSample,
   inspectUpload,

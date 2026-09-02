@@ -1,3 +1,11 @@
+/**
+ * Inference entry point for the lab.
+ *
+ * The hosted Hugging Face API this app used to call was retired, so the model now runs
+ * in the visitor's browser via onnxruntime-web. The exported surface still speaks the
+ * `POST /predict` response shape the UI was built around, so callers did not change.
+ */
+
 import type { ApiCategory } from "@/config/api-categories";
 import { isApiCategory } from "@/config/api-categories";
 import {
@@ -8,66 +16,24 @@ import {
 import type { ApiHealth, ApiMetadata, InspectionSample } from "@/types/inspection";
 import type { PredictApiResponse, PredictOutcome, PredictRequestOptions } from "@/types/predict-api";
 import { curatedSampleToFile } from "@/lib/sample-loader";
+import { decodeToModelInput, encodeGrayToDataUrl, encodeRgbToDataUrl } from "@/lib/inference/image-io";
+import {
+  ensureModelLoaded,
+  reconstruct,
+  type ModelLoadProgress,
+} from "@/lib/inference/model-session";
+import {
+  BBOX_METHOD,
+  IMAGE_SIZE,
+  LOCALIZATION_NOTE,
+  runPipeline,
+  rgbToTensor,
+  SCORE_NAME,
+} from "@/lib/inference/pipeline";
 
-const DEFAULT_BASE_URL =
-  process.env.NEXT_PUBLIC_ANOMALY_API_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  process.env.NEXT_PUBLIC_ANOMALY_API_BASE_URL ??
-  process.env.NEXT_PUBLIC_VITE_API_BASE_URL ??
-  "https://salmeida-bottle-anomaly-detection.hf.space";
-
-const DEFAULT_FETCH_TIMEOUT_MS = 8_000;
-const DEFAULT_PREDICT_TIMEOUT_MS = 30_000;
+export type { ModelLoadProgress };
 
 const FRIENDLY_ERROR = "Could not process the image. Please try again.";
-
-function joinUrl(base: string, path: string): string {
-  const normalizedBase = base.replace(/\/$/, "");
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${normalizedBase}${normalizedPath}`;
-}
-
-async function fetchJson<T>(
-  url: string,
-  options: RequestInit = {},
-  timeoutMs = DEFAULT_FETCH_TIMEOUT_MS,
-): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  const externalSignal = options.signal;
-  if (externalSignal) {
-    if (externalSignal.aborted) controller.abort();
-    else externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
-  }
-
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    if (!response.ok) {
-      const text = await response.text();
-      if (response.status === 400 && text.toLowerCase().includes("category")) {
-        throw new Error("Invalid category for this model. Choose a supported product category.");
-      }
-      if (response.status >= 500) {
-        throw new Error(FRIENDLY_ERROR);
-      }
-      throw new Error(text || FRIENDLY_ERROR);
-    }
-    return (await response.json()) as T;
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error("Request timed out.");
-    }
-    if (error instanceof Error && error.message) throw error;
-    throw new Error(FRIENDLY_ERROR);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-export function getApiBaseUrl(): string {
-  return DEFAULT_BASE_URL;
-}
 
 function assertValidCategory(category: string): asserts category is ApiCategory {
   if (!isApiCategory(category)) {
@@ -75,100 +41,64 @@ function assertValidCategory(category: string): asserts category is ApiCategory 
   }
 }
 
-function validatePredictPayload(data: unknown): PredictApiResponse {
-  if (!data || typeof data !== "object") {
-    throw new Error(FRIENDLY_ERROR);
-  }
-  const payload = data as Record<string, unknown>;
-  if (typeof payload.is_anomaly !== "boolean") {
-    throw new Error(FRIENDLY_ERROR);
-  }
-  if (!payload.scores || typeof payload.scores !== "object") {
-    throw new Error(FRIENDLY_ERROR);
-  }
-  return data as PredictApiResponse;
+/** Model identity — served from the exported training artifacts, not from a remote API. */
+export async function fetchApiMetadata(): Promise<ApiMetadata> {
+  return {
+    modelName: DAE_MODEL_NAME,
+    experimentName: DAE_EXPERIMENT_NAME,
+    scoreName: DAE_RECOMMENDED_SCORE,
+  };
 }
 
-/** GET / — optional metadata (falls back to DAE defaults). */
-export async function fetchApiMetadata(
-  baseUrl = getApiBaseUrl(),
-  signal?: AbortSignal,
-): Promise<ApiMetadata> {
-  try {
-    const data = await fetchJson<Record<string, unknown>>(joinUrl(baseUrl, "/"), { signal });
-    return {
-      modelName: typeof data.model_name === "string" ? data.model_name : DAE_MODEL_NAME,
-      experimentName:
-        typeof data.experiment_name === "string" ? data.experiment_name : DAE_EXPERIMENT_NAME,
-      scoreName: typeof data.score_name === "string" ? data.score_name : DAE_RECOMMENDED_SCORE,
-    };
-  } catch {
-    return {
-      modelName: DAE_MODEL_NAME,
-      experimentName: DAE_EXPERIMENT_NAME,
-      scoreName: DAE_RECOMMENDED_SCORE,
-    };
+/** Readiness of the in-browser engine, shaped like the old `/health` response. */
+export async function getApiHealth(signal?: AbortSignal): Promise<ApiHealth> {
+  if (signal?.aborted) {
+    throw new Error("Request aborted.");
   }
-}
 
-/** GET /health — API readiness. */
-export async function getApiHealth(
-  baseUrl = getApiBaseUrl(),
-  signal?: AbortSignal,
-): Promise<ApiHealth> {
   try {
-    const data = await fetchJson<Record<string, unknown>>(joinUrl(baseUrl, "/health"), { signal });
-    const rawStatus = String(data.status ?? "unknown").toLowerCase();
-    const modelLoaded = rawStatus === "ready" || rawStatus === "ok";
-    const isLoading = rawStatus === "loading" || rawStatus === "starting";
-
-    let message = "Model ready";
-    if (isLoading) {
-      message = "Model is loading, try again in a few seconds.";
-    } else if (!modelLoaded) {
-      message = `Status: ${rawStatus}`;
-    }
-
+    await ensureModelLoaded();
     return {
-      status: modelLoaded ? "online" : "degraded",
-      rawStatus,
-      modelLoaded,
+      status: "online",
+      rawStatus: "ready",
+      modelLoaded: true,
       apiReachable: true,
-      modelName:
-        typeof data.model_name === "string"
-          ? data.model_name
-          : "multi_product_denoising_conv_autoencoder",
-      message,
+      modelName: DAE_MODEL_NAME,
+      message: "Model ready",
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "API offline";
+    const message = error instanceof Error ? error.message : "Model failed to load.";
     return {
       status: "offline",
-      rawStatus: "offline",
+      rawStatus: "error",
       modelLoaded: false,
       apiReachable: false,
-      message: message.includes("timed out") ? "API offline — request timed out." : "API offline",
+      modelName: DAE_MODEL_NAME,
+      message,
     };
   }
 }
 
 export function assertApiReadyForInference(health: ApiHealth): void {
-  if (!health.apiReachable) {
-    throw new Error(health.message ?? "API unavailable.");
-  }
-  if (health.rawStatus === "loading" || health.rawStatus === "starting") {
-    throw new Error("Model is loading, try again in a few seconds.");
+  if (health.rawStatus === "loading") {
+    throw new Error("Model is still loading, try again in a few seconds.");
   }
   if (!health.modelLoaded) {
     throw new Error(health.message ?? "Model not ready.");
   }
 }
 
-/** POST /predict — multipart image + category. */
+/** Warm up the engine ahead of the first inspection, reporting download progress. */
+export function preloadModel(
+  onProgress?: (progress: ModelLoadProgress) => void,
+): Promise<unknown> {
+  return ensureModelLoaded(onProgress);
+}
+
+/** Run the autoencoder locally and return the `/predict` payload the UI consumes. */
 export async function predictAnomaly(
   file: Blob,
   options: PredictRequestOptions,
-  baseUrl = getApiBaseUrl(),
 ): Promise<PredictOutcome> {
   if (!file || file.size === 0) {
     throw new Error("No image provided. Select or upload a sample first.");
@@ -176,31 +106,58 @@ export async function predictAnomaly(
 
   assertValidCategory(options.category);
 
-  const form = new FormData();
-  form.append("file", file);
-  form.append("category", options.category);
-  form.append("include_images", String(options.includeImages ?? true));
-  form.append("include_debug", String(options.includeDebug ?? false));
-  form.append("include_overlay", String(options.includeOverlay ?? false));
-
-  const predictUrl = joinUrl(baseUrl, "/predict");
+  const model = await ensureModelLoaded();
   const start = performance.now();
 
-  const raw = await fetchJson<unknown>(
-    predictUrl,
-    {
-      method: "POST",
-      body: form,
-      signal: options.signal,
-    },
-    options.timeoutMs ?? DEFAULT_PREDICT_TIMEOUT_MS,
-  );
+  let rgb: Uint8ClampedArray;
+  try {
+    rgb = await decodeToModelInput(file);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error(FRIENDLY_ERROR);
+  }
 
-  const payload = validatePredictPayload(raw);
-  const latencyMs =
-    typeof payload.debug?.latency_ms === "number"
-      ? payload.debug.latency_ms
-      : performance.now() - start;
+  if (options.signal?.aborted) {
+    throw new Error("Inspection cancelled.");
+  }
+
+  const inputTensor = rgbToTensor(rgb);
+  const reconstruction = await reconstruct(model, inputTensor);
+  const result = runPipeline(rgb, inputTensor, reconstruction, model.profile, options.category);
+  const latencyMs = performance.now() - start;
+
+  const payload: PredictApiResponse = {
+    status: result.status,
+    is_anomaly: result.isAnomaly,
+    category: options.category,
+    model: {
+      experiment_name: DAE_EXPERIMENT_NAME,
+      model_name: DAE_MODEL_NAME,
+      score_name: SCORE_NAME,
+    },
+    scores: {
+      anomaly_score: result.anomalyScore,
+      threshold: result.threshold,
+      error_mean: result.errorMean,
+      z_map_max: result.zMapMax,
+    },
+    image_size: { width: IMAGE_SIZE, height: IMAGE_SIZE },
+    boxes: result.boxes,
+    debug: {
+      bbox_method: BBOX_METHOD,
+      localization_note: LOCALIZATION_NOTE,
+      latency_ms: Number(latencyMs.toFixed(3)),
+    },
+  };
+
+  if (options.includeImages ?? true) {
+    const [original, reconstructionImage, heatmap, mask] = await Promise.all([
+      encodeRgbToDataUrl(result.originalRgb),
+      encodeRgbToDataUrl(result.reconstructionRgb),
+      encodeRgbToDataUrl(result.heatmapRgb),
+      encodeGrayToDataUrl(result.maskGray),
+    ]);
+    payload.images = { original, reconstruction: reconstructionImage, heatmap, mask };
+  }
 
   return { payload, latencyMs };
 }
@@ -220,16 +177,10 @@ export async function inspectUpload(
   return predictAnomaly(file, options);
 }
 
-/** @deprecated Use getApiHealth */
-export const fetchApiHealth = getApiHealth;
-
-/** @deprecated Use predictAnomaly */
-export const inferAnomaly = predictAnomaly;
-
 export const anomalyApi = {
-  getApiBaseUrl,
   fetchApiMetadata,
   getApiHealth,
+  preloadModel,
   predictAnomaly,
   inspectSample,
   inspectUpload,

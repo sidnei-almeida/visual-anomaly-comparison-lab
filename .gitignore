@@ -121,6 +121,9 @@ weights/
 models/*.pt
 models/*.pth
 
+# Exception: the exported browser inference assets are part of the deployed app.
+!/public/model/dae-bottle.onnx
+
 # --- MVTec AD raw dataset folders (repo root — copy source for catalog scripts) ---
 /bottle/
 /good/
@@ -177,3 +180,7 @@ models/*.pth
 .eslintcache
 .stylelintcache
 tsconfig.tsbuildinfo
+
+# --- Generated inference assets ---
+# Copied from node_modules by scripts/copy-ort-assets.mjs on predev/prebuild.
+/public/ort/

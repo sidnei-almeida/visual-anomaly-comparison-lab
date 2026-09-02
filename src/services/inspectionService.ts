@@ -87,8 +87,8 @@ export { isSampleApiSupported };
 
 export async function bootstrapLab(signal?: AbortSignal): Promise<LabBootstrap> {
   const [health, metadata] = await Promise.all([
-    api.getHealth(undefined, signal),
-    api.getMetadata(undefined, signal),
+    api.getHealth(signal),
+    api.getMetadata(),
   ]);
 
   return {
@@ -106,7 +106,7 @@ export async function inspectSampleRemote(
 ): Promise<InspectionResult> {
   const category = resolveCategoryForSample(sample);
 
-  const health = await api.getHealth(undefined, signal);
+  const health = await api.getHealth(signal);
   assertApiReadyForInference(health);
 
   const { payload, latencyMs } = await api.inspectSample(sample, buildPredictOptions(category, signal));
@@ -122,7 +122,7 @@ export async function inspectUploadRemote(
 ): Promise<InspectionResult> {
   const category = resolveCategoryForSample(sample);
 
-  const health = await api.getHealth(undefined, signal);
+  const health = await api.getHealth(signal);
   assertApiReadyForInference(health);
 
   const { payload, latencyMs } = await api.inspectUpload(file, buildPredictOptions(category, signal));
@@ -177,7 +177,7 @@ export async function inspectSamplesBatch(
 
     try {
       if (!healthChecked) {
-        const health = await api.getHealth(undefined, options.signal);
+        const health = await api.getHealth(options.signal);
         assertApiReadyForInference(health);
         healthChecked = true;
       }
